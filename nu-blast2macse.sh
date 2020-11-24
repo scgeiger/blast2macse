@@ -19,6 +19,7 @@ fi
 # start this from analysis folder
 MAIN_PATH=$(pwd) #this leads to starting directory. This is assumed to be a directory containing subdirs for each sequence type
 ERROR_FILE="$MAIN_PATH/$TIME_STAMP-blast2macse_error.log"
+echo "#ID   Category    Error" > $ERROR_FILE
 
 # For each subdirectory in this directory
 for SUBDIR in `ls -d */`
@@ -230,6 +231,77 @@ do
         else
             echo "$ID: PopGenome file was detected. Skipping mini-PopGenome.R"
         fi 
+
+    ######################
+    ######################
+    ## SEQ REM ANALYSIS ##
+    ######################
+    ######################
+
+        echo "Now looking at what happens when problem sequences are removed."
+        
+        # Removing seqs with deletions (1 codon at least) and Ns
+        if [ ! -f "$ID-removed-macse.aln" ]; then
+            perl /mnt/projects/EC_ST131/200923/scripts/rm-delN.pl -aln "expanded-$ID.uniqseqs_NT.aln" -dist "$ID.macse-codon-dist.tsv"
+            RESULT=$?
+            if [ $RESULT -ne 0 ]; then
+                echo "$ID: Error running rm-delN.pl" >> "$ERROR_FILE"
+                continue
+            fi
+        else
+            echo "$ID: removed alignment file found. Skipping rm-delN.pl"
+        fi
+
+        # Getting codon use and distribution
+        if [ ! -f "$ID-removed.macse-codon-dist.tsv" ]; then
+            perl /mnt/projects/EC_ST131/200923/scripts/codon-distribution.pl -ref "$ID.consensus" -query "$ID-removed-macse.aln"
+            RESULT=$?
+            if [ $RESULT -ne 0 ]; then
+                echo "$ID-removed: Error running codon-distribution.pl"
+                echo "$ID   R_CODONDIST   Error running codon-distribution.pl" >> "$ERROR_FILE"
+                continue
+            fi
+            mv macse-codon-distribution.tsv "$ID-removed.macse-codon-dist.tsv"
+        else
+            echo "$ID-removed: codon dist file found. Skipping codon-distribution.pl"
+        fi
+
+        # Getting uniqallele data for latter plotting
+        if [ ! -f "$ID-removed.macse-nt-uniq.tsv" ] || [ ! -f "$ID-removed.macse-aa-uniq.tsv" ]; then
+            perl /mnt/projects/EC_ST131/200923/scripts/nu-macse-uniq.pl -query "$ID-removed-macse.aln" -ref "$ID.consensus" -greedy TRUE
+            RESULT=$?
+            if [ $RESULT -ne 0 ]; then
+                echo "$ID-removed: Error running nu-macse-uniq.pl"
+                echo "$ID   R_MACSE   Error running nu-macse-uniq.pl" >> "$ERROR_FILE"
+                continue
+            fi
+            mv nt-uniq-macse-output.tsv "$ID-removed.macse-nt-uniq.tsv"
+            mv aa-uniq-macse-output.tsv "$ID-removed.macse-aa-uniq.tsv"
+        else
+            echo "$ID-removed: macse uniqallele files found. Skipping nu-macse-uniq.pl"
+        fi
+
+        # Running PopGenome analysis
+        # Format file first
+        cp "$ID-removed-macse.aln" "pg-fmt-$ID-removed-macse.aln"
+        sed -i 's/\!/-/g' "pg-fmt-$ID-removed-macse.aln"
+        sed -i '/^#/d' "pg-fmt-$ID-removed-macse.aln"
+        
+        if [ ! -f "pg-fmt-$ID-removed-macse-PopGenome.tsv" ]; then
+            Rscript /mnt/projects/EC_ST131/200923/scripts/mini-PopGenome.R "pg-fmt-$ID-removed-macse.aln"
+            # echo ("Error message: In mean (as.numeric(x)): NAs introduced by coercion is expected. Just ignore")
+            # That just means that we're likely seeing only one allele present, or not enough info to calc some stats
+            # Regardless, this error will trigger the usual error message, so it's been changed here.
+            if [ ! -f "pg-fmt-$ID-removed-macse-PopGenome.tsv" ]; then
+                echo "$ID-removed: Error running mini-PopGenome.R"
+                echo "$ID   R_POPGENOME   Error running mini-PopGenome.R" >> "$ERROR_FILE"
+                continue
+            fi
+        else
+            echo "$ID-removed: PopGenome file was detected. Skipping mini-PopGenome.R"
+        fi
+
+
 
         echo ""
         echo "done looping through $GENE_NAME"    
