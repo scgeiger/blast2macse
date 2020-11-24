@@ -68,16 +68,27 @@ do
             RESULT=$?
             if [ $RESULT -ne 0 ]; then
                 echo "$ID   BLAST   Error running cmd" >> "$ERROR_FILE"
+                echo "$ID: Error running blast command"
+                continue
+            fi
+            if [ ! -s "$ID.raw-blast" ]; then
+                echo "$ID   BLAST   No matches found" >> "$ERROR_FILE"
+                echo "$ID: No BLAST hits found"
                 continue
             fi
         else
+            if [ ! -s "$ID.raw-blast" ]; then
+                echo "$ID   BLAST   No matches found" >> "$ERROR_FILE"
+                echo "$ID: No BLAST hits found"
+                continue
+            fi
             echo "$ID: BLAST file already exists. Checking format."
         fi
 
         # Format the blast script to clustal format
         # Make sure blast output exists and has contents. If no matches were found, empty file will be made
-        if [ ! -f $ID.blast ]; then
-            if [ -f $ID.raw-blast ] && [ -s $ID.raw-blast ]; then
+        if [ ! -f "$ID.blast" ]; then
+            if [ -f "$ID.raw-blast" ] && [ -s "$ID.raw-blast" ]; then
                 perl /mnt/projects/devspace/blast2clustal/blast2clustal.pl "$ID.raw-blast"
                 RESULT=$?
                 if [ $RESULT -ne 0 ]; then
@@ -300,8 +311,6 @@ do
         else
             echo "$ID-removed: PopGenome file was detected. Skipping mini-PopGenome.R"
         fi
-
-
 
         echo ""
         echo "done looping through $GENE_NAME"    
