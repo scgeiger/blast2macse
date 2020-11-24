@@ -34,6 +34,12 @@ GetOptions (
     'refdir=s'     => \$REFPATH,     # Directory with reference sequences
 );
 
+# Verify input
+if (!defined $REFPATH) {
+    &print_usage("\nPlease specify the directory path holding your reference genes");
+}
+
+
 $TIMESTAMP = getLoggingTime();
 $PARENTPATH = cwd();
     print "parent path is $PARENTPATH\n";
