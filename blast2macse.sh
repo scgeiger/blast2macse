@@ -138,23 +138,3 @@ do
 done #looping through subdirs
         
 
-        # SNAP Calculations
-#        perl /mnt/projects/devspace/snapconvert/snapconvert.pl "expanded-$ID.uniqseqs_NT.aln"
-#            RESULT=$?
-#            if [ $RESULT -ne 0 ]; then
-#                echo "$ID: Error running snapconvert.pl" >> "$ERROR_FILE"
-#                continue
-#            fi
-#        perl /mnt/projects/EC_ST131/200923/scripts/SNAP.pl "snap-fmt-expanded-$ID.fasta"
-#            RESULT=$?
-#            if [ $RESULT -ne 0 ]; then
-#                echo "$ID: Error running SNAP.pl" >> "$ERROR_FILE"
-#                continue
-#            fi
-
-
-
-        
-        
-
-        
