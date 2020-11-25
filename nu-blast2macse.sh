@@ -300,7 +300,7 @@ do
         sed -i '/^#/d' "pg-fmt-$ID-removed-macse.aln"
         
         if [ ! -f "$ID-removed-macse-PopGenome.tsv" ]; then
-            Rscript /mnt/projects/EC_ST131/200923/scripts/mini-PopGenome.R "pg-fmt-$ID-removed-macse.aln"
+            Rscript /mnt/projects/devspace/blast2macse/mini-PopGenome.R "pg-fmt-$ID-removed-macse.aln"
             # echo ("Error message: In mean (as.numeric(x)): NAs introduced by coercion is expected. Just ignore")
             # That just means that we're likely seeing only one allele present, or not enough info to calc some stats
             # Regardless, this error will trigger the usual error message, so it's been changed here.
