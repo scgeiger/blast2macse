@@ -31,6 +31,7 @@ my $CSV;
 my %hash;
 my $pos;
 my $no_consensus_err_file;
+my $file;
 
 GetOptions (
     'refdir=s'     => \$REFPATH,     # Directory with reference sequences
@@ -122,10 +123,13 @@ open S, '>', $all_file or die "problem saving output to all_file\n";
  
 #$no_consensus_err_file = "no-consensus.err"; 
 foreach $GENE (@all_genes) {
-    print "gene is $GENE\n";
     $outfile = "$PARENTPATH/$GENE/" . "$PARENTDIR-$GENE" . "-summary.tsv";
-
-$DATA_ID = $PARENTDIR . "-" . $GENE;
+    print "$GENE\n";
+#    if ( $GENE =~ /\(/ ) {
+#        $GENE =~ s/([\\()])/\\$1/g;
+#    }
+#    print "$GENE\n";
+    $DATA_ID = $PARENTDIR . "-" . $GENE;
 
     ###############################
     # Check if raw-blast is empty #
@@ -133,7 +137,7 @@ $DATA_ID = $PARENTDIR . "-" . $GENE;
     if ( -z "$PARENTPATH/$GENE/$DATA_ID.raw-blast" ) {
     open O, '>', $outfile or die "problem saving output to file\n";
         print O "#Analysis run on $TIMESTAMP, using gene $GENE.\n";
-        print "Didn't find any BLAST hits. Exiting table with defaults\n";
+        print "$GENE: Didn't find any BLAST hits. Exiting table with defaults\n";
         $output =  $dataset  . "\t" .
                 $GENE         . "\t" .
                 $db_nseqs     . "\t" .
@@ -230,8 +234,12 @@ $DATA_ID = $PARENTDIR . "-" . $GENE;
             # get number of blast hits #
             ############################
             @temp = ();
-            $command = "wc -l $PARENTPATH/$GENE/$DATA_ID.raw-blast | awk '{ print \$1 }'";
-            print "$command\n";
+            $command = "wc -l ". "$PARENTPATH/$GENE/$DATA_ID.raw-blast";
+            if ( $command =~ /\(/ || $command =~ /\)/ || $command =~ /\'/) {
+                $command =~ s/([\\()\'])/\\$1/g;
+            }
+            $command .= " | awk '{ print \$1 }'";
+            print "command is $command\n";
             @temp = `$command`;
             chomp $temp[0];
             $hit_nseqs = $temp[0];
@@ -389,7 +397,6 @@ $DATA_ID = $PARENTDIR . "-" . $GENE;
             $nSingSNPs = 0;
             $n_ntSingHap = 0;
             $n_ntMajorHap = 0; 
-
             open F, '<', "$PARENTPATH/$GENE/$DATA_ID.macse-nt-uniq.tsv"; # or die "Could not open uniqallele data\n";
                 while ($row = <F>) {
                     chomp $row;
