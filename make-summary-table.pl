@@ -18,6 +18,8 @@ my ($PG_TajimaD_R, $PG_RozasR2_R, $PG_FuliF_R, $PG_FuliD_R, $PG_FuFs_R, $PG_pi_R
 my ($seq, $seqID, $row, $nRem);
 my $outfile;
 my $output;
+my $all_file;
+my $header;
 my @all_genes = ();
 my %blast_db = ();
 my @temp = ();
@@ -39,6 +41,8 @@ if (!defined $REFPATH) {
     &print_usage("\nPlease specify the directory path holding your reference genes");
 }
 
+# Use this code in the ST directory, not in the analysis directory
+# Assumes my/path/is/analysis/ST/genes
 
 $TIMESTAMP = getLoggingTime();
 $PARENTPATH = cwd();
@@ -62,41 +66,15 @@ opendir ($DIR, $PARENTPATH) || die "Error in opening dir $PARENTPATH\n";
         push(@SUBDIR, $row);
     }
 closedir($DIR);
-       
-# PUT IN A KILL SWITCH HERE
-$no_consensus_err_file = "no-consensus.err"; 
-foreach $GENE (@all_genes) {
-    print "gene is $GENE\n";
-    $outfile = $GENE . "-summary.tsv";
-    print "outfile is $outfile\n";
 
-    ########################
-    # Get reference length #
-    ########################
-    $temp = (); 
-    open F, '<', "$REFPATH/$GENE.nt";
-        while ($row = <F>) {
-            chomp $row;
-            if ($row =~ /^>/ || $row =~ /^#/) {
-                next;
-            }
-            else {
-                $temp .= $row;
-            }
-        }
-    close F; 
-    $ref_length = length($temp);
-    #print "ref_length for $GENE is $ref_length\n";
-
-    open O, '>', $outfile or die "problem saving output to file\n";
-        print O "#Analysis run on $TIMESTAMP, using gene $GENE.\n";
-        my $header =  "dataset"     . "\t" .
+# Making header
+$header      =  "dataset"     . "\t" .
                 "gene"        . "\t" .
                 "db_nseqs"    . "\t" .
                 "hit_nseqs"   . "\t" .
-                "ref_length"  . "\t" . 
+                "ref_length"  . "\t" .
                 "aln_length"  . "\t" .
-                "ntTS"        . "\t" . 
+                "ntTS"        . "\t" .
                 "ntTV"        . "\t" .
                 "ntIN"        . "\t" .
                 "ntDEL"       . "\t" .
@@ -109,7 +87,7 @@ foreach $GENE (@all_genes) {
                 "aaDEL"       . "\t" .
                 "aaFS"        . "\t" .
                 "aaAM"        . "\t" .
-                "ntHap"       . "\t" . 
+                "ntHap"       . "\t" .
                 "ntSingHap"   . "\t" .
                 "nSegSite"    . "\t" .
                 "nSingSNPs"   . "\t" .
@@ -137,29 +115,26 @@ foreach $GENE (@all_genes) {
                 "PG_SingHaps_R". "\t" .
                 "PG_nSeqs_R"  . "\n";
 
-        print O $header;
-        $DIR = ();
-        $DIR = $PARENTDIR;
-#        foreach $DIR (@SUBDIR) {
-#            $DATA_ID = $DIR . "-" . $GENE;
-            $DATA_ID = $PARENTDIR . "-" . $GENE;
-#            $dataset = "$DIR";
-             $dataset = "$PARENTDIR";
-            ######################################
-            # get number of sequences downloaded #
-            ######################################
-            @temp = ();
-            print "llama $PARENTPATH/$PARENTDIR-count.txt\n";
-            open my $F, '<', "$PARENTPATH/$PARENTDIR-count.txt";
-                chomp (@temp = <$F>);
-                $db_nseqs = $temp[0];
-            close $F;
-           
-            #############################################
-#------->   # check to see if there even are blast hits #
-            #############################################
-            if (-z "$PARENTPATH/$GENE/$DATA_ID.raw-blast") {
-                $output =  $dataset  . "\t" .
+$all_file =  "$PARENTPATH/" . "$PARENTDIR" . "-all-summary.tsv";
+open S, '>', $all_file or die "problem saving output to all_file\n";
+    print S "#Analysis run on $TIMESTAMP\n";
+    print S $header;
+ 
+#$no_consensus_err_file = "no-consensus.err"; 
+foreach $GENE (@all_genes) {
+    print "gene is $GENE\n";
+    $outfile = "$PARENTPATH/$GENE/" . "$PARENTDIR-$GENE" . "-summary.tsv";
+
+$DATA_ID = $PARENTDIR . "-" . $GENE;
+
+    ###############################
+    # Check if raw-blast is empty #
+    ###############################
+    if ( -z "$PARENTPATH/$GENE/$DATA_ID.raw-blast" ) {
+    open O, '>', $outfile or die "problem saving output to file\n";
+        print O "#Analysis run on $TIMESTAMP, using gene $GENE.\n";
+        print "Didn't find any BLAST hits. Exiting table with defaults\n";
+        $output =  $dataset  . "\t" .
                 $GENE         . "\t" .
                 $db_nseqs     . "\t" .
                 "0"    . "\t" . #hit_nseqs
@@ -207,22 +182,60 @@ foreach $GENE (@all_genes) {
                 "NA"  . "\n";
 
             print O $output;
+            print S $output;
             #}
             close O;
             next;
-             
+    }
+
+    ########################
+    # Get reference length #
+    ########################
+    $temp = (); 
+    open F, '<', "$REFPATH/$GENE.nt";
+        while ($row = <F>) {
+            chomp $row;
+            if ($row =~ /^>/ || $row =~ /^#/) {
+                next;
             }
- 
+            else {
+                $temp .= $row;
+            }
+        }
+    close F; 
+    $ref_length = length($temp);
+    #print "ref_length for $GENE is $ref_length\n";
+
+    open O, '>', $outfile or die "problem saving output to file\n";
+        print O "#Analysis run on $TIMESTAMP, using gene $GENE.\n";
+        print O $header;
+        $DIR = ();
+        $DIR = $PARENTDIR;
+#        foreach $DIR (@SUBDIR) {
+#            $DATA_ID = $DIR . "-" . $GENE;
+            $DATA_ID = $PARENTDIR . "-" . $GENE;
+#            $dataset = "$DIR";
+             $dataset = "$PARENTDIR";
+            ######################################
+            # get number of sequences downloaded #
+            ######################################
+            @temp = ();
+#            print "llama $PARENTPATH/$PARENTDIR-count.txt\n";
+            open my $F, '<', "$PARENTPATH/$PARENTDIR-count.txt";
+                chomp (@temp = <$F>);
+                $db_nseqs = $temp[0];
+            close $F;
+           
             ############################
             # get number of blast hits #
             ############################
             @temp = ();
-            $command = "wc -l $PARENTPATH/$GENE/$DATA_ID.raw-blast";
-            print "platypus $PARENTPATH/$GENE/$DATA_ID.raw-blast\n";
+            $command = "wc -l $PARENTPATH/$GENE/$DATA_ID.raw-blast | awk '{ print \$1 }'";
+            print "$command\n";
             @temp = `$command`;
             chomp $temp[0];
             $hit_nseqs = $temp[0];
-            $hit_nseqs =~ s/\s.*//; #remove everything after number
+#            $hit_nseqs =~ s/\s.*//; #remove everything after number
             #print "hit_nseqs is $hit_nseqs\n"; 
       
             ######################## 
@@ -238,15 +251,8 @@ foreach $GENE (@all_genes) {
             # At this point, have already screened out blast files that are empty
             # If the consensus file does not exist, there is an error, most likely via MACSE alignment
             # Need to exit loop here
-            if (! -f "$PARENTPATH/$GENE/$DATA_ID.consensus" ) {
-                print "could not find $DATA_ID.consensus\n";
-                open ERR, '>', $no_consensus_err_file;
-                    print "$GENE\t$DATA_ID\t"."no consensus\n";
-                close ERR;
-                next;
-            } 
+
             $temp = ();
-            print "cheetah $PARENTPATH/$GENE/$DATA_ID.consensus\n";
             open F, '<', "$PARENTPATH/$GENE/$DATA_ID.consensus";
                 while ($row = <F>) {
                     chomp $row;
@@ -442,7 +448,7 @@ foreach $GENE (@all_genes) {
             ######################
             # Getting PopGenome Data with removed seqs
             @temp = ();
-            open F, '<', "$PARENTPATH/$GENE/pg-fmt-$DATA_ID-removed-macse-PopGenome.tsv";
+            open F, '<', "$PARENTPATH/$GENE/$DATA_ID-removed-macse-PopGenome.tsv";
                 while ($row = <F>) {
                     chomp $row;
                     push @temp, $row;
@@ -466,22 +472,22 @@ foreach $GENE (@all_genes) {
             ######################
             # Getting number of seqs removed because of dels or Ns 
             @temp = ();
-            print "path is" . "$PARENTPATH/$GENE/$DATA_ID-removed-macse-ids.tsv\n";
+#            print "path is" . "$PARENTPATH/$GENE/$DATA_ID-removed-macse-ids.tsv\n";
             open F, '<', "$PARENTPATH/$GENE/$DATA_ID-removed-macse-ids.tsv";
                 @temp = <F>;
                 $temp = $temp[0];
                 chomp $temp;
             close F;
             @temp = ();
-            print "temp is $temp\n";
+#            print "temp is $temp\n";
             @temp = split (';', $temp);
-            print "$temp[2]\n";
+#            print "$temp[2]\n";
             $nRem = $temp[2];
-            print "1 $nRem\n";
+#            print "1 $nRem\n";
             $nRem =~ s/^\s+//;
-            print "2 $nRem\n";
+#            print "2 $nRem\n";
             $nRem =~ s/[^ ]* //;
-            print "nrem is $nRem\n";
+#            print "nrem is $nRem\n";
 
  
         ###################
@@ -535,9 +541,12 @@ foreach $GENE (@all_genes) {
                 $PG_nSeqs_R  . "\n";
 
     print O $output;
+    print S $output;
     #}
     close O;
 } 
+
+close S;
 
 print "Summary tables generated\n";
 # Remember to track indexes
@@ -550,12 +559,11 @@ sub print_usage {
         print STDERR $error, "\n";
     }
 
-    print "\nUsage: $0 -refdir [directory with reference genes] -blastindex [abs path to blast index file]\n";
+    print "\nUsage: $0 -refdir [directory with reference genes]\n";
     print "\tThe script is highly customized\n";
 
     print "\tBE SURE TO START THIS IN YOUR PARENT DIRECTORY\n";
     print "\trefdir: directory holding reference sequences that were blasted\n";
-    print "\tblastindex: commented header, dataset then db location, space separated\n";
     print "\tNote that query and ref must both be the same length\n";
 
     print "\nCheers!\n\n";
