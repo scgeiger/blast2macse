@@ -29,5 +29,5 @@ for(i in which(is.nan(n$Fu.F_S))) {
 }
 
 out.df <- select(n, -c(Fay.Wu.H, Zeng.E, Strobeck.S, x))
-OUTFILE <- paste(INDEX.NO, "-PopGenome.tsv", sep = "")
+OUTFILE <- "PopGenome.tsv"
 write.table(out.df, file=OUTFILE, sep="\t", row.names = FALSE, quote = FALSE)

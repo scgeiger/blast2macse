@@ -234,6 +234,7 @@ do
             # echo ("Error message: In mean (as.numeric(x)): NAs introduced by coercion is expected. Just ignore")
             # That just means that we're likely seeing only one allele present, or not enough info to calc some stats
             # Regardless, this error will trigger the usual error message, so it's been changed here. 
+            mv "PopGenome.tsv" "$ID-PopGenome.tsv"
             if [ ! -f "$ID-PopGenome.tsv" ]; then
                 echo "$ID: Error running mini-PopGenome.R"
                 echo "$ID   POPGENOME   Error running mini-PopGenome.R" >> "$ERROR_FILE"
@@ -298,12 +299,13 @@ do
         sed -i 's/\!/-/g' "pg-fmt-$ID-removed-macse.aln"
         sed -i '/^#/d' "pg-fmt-$ID-removed-macse.aln"
         
-        if [ ! -f "pg-fmt-$ID-removed-macse-PopGenome.tsv" ]; then
+        if [ ! -f "$ID-removed-macse-PopGenome.tsv" ]; then
             Rscript /mnt/projects/EC_ST131/200923/scripts/mini-PopGenome.R "pg-fmt-$ID-removed-macse.aln"
             # echo ("Error message: In mean (as.numeric(x)): NAs introduced by coercion is expected. Just ignore")
             # That just means that we're likely seeing only one allele present, or not enough info to calc some stats
             # Regardless, this error will trigger the usual error message, so it's been changed here.
-            if [ ! -f "pg-fmt-$ID-removed-macse-PopGenome.tsv" ]; then
+            mv "PopGenome.tsv" "$ID-removed-macse-PopGenome.tsv" 
+            if [ ! -f "$ID-removed-macse-PopGenome.tsv" ]; then
                 echo "$ID-removed: Error running mini-PopGenome.R"
                 echo "$ID   R_POPGENOME   Error running mini-PopGenome.R" >> "$ERROR_FILE"
                 continue
