@@ -14,7 +14,7 @@ SUMMARY.FILE <- "all-summary.tsv"
 SUMMARY.PREFIX <- gsub("\\..*","",SUMMARY.FILE)
 print(SUMMARY.PREFIX)
 
-d <- read.table(SUMMARY.FILE, header = TRUE, sep = "\t", as.is = TRUE, comment.char = "#")
+d <- read.table(SUMMARY.FILE, header = TRUE, sep = "\t", as.is = TRUE, comment.char = "#", quote = "")
 
 # Setting up key aes vars
 gene.shapes <- c("acrR" = 0,
@@ -52,7 +52,7 @@ gene.colors <- c("acrR" = "#9E0142",
                  "uidR" = "#2A2D34"
                 )
 
-gene.colors <- c("#9E0142",
+ds.cols <- c("#9E0142",
                  "#D53E4F",
                  "#F46D43",
                  "#FDAE61",
@@ -73,13 +73,13 @@ gene.colors <- c("#9E0142",
 title <- paste("PG vs PG_R: SingHap: ", SUMMARY.PREFIX, sep = "")
 CompSingHap <- ggplot(d, aes(x = PG_SingHaps_R, y = PG_SingHaps))+
             theme_light() +
-            geom_point(size = 2, alpha = 0.5, aes(shape = gene)) +
+            geom_point(size = 2, alpha = 0.5) +
             theme(text=element_text(size=8), axis.text.x=element_text(angle=45)) +
-            geom_text(aes(label=dataset), hjust = 0, vjust = 0) +
+            geom_text(aes(label=gene), hjust = 0, vjust = 0) +
             ggtitle(title) +
-            geom_abline(intercept = 0, slope = 1, color = "#F94144") +
-            scale_shape_manual ("Gene", values = gene.shapes)
+            geom_abline(intercept = 0, slope = 1, color = "#F94144") 
 x11()
+
 title <- paste("my vs PG_R: SingHap: ", SUMMARY.PREFIX, sep = "")
 CompSingHap <- ggplot(d, aes(x = ntSingHap, y = PG_SingHaps_R))+
             theme_light() +
@@ -90,11 +90,11 @@ CompSingHap <- ggplot(d, aes(x = ntSingHap, y = PG_SingHaps_R))+
             geom_abline(intercept = 0, slope = 1, color = "#F94144")
 
 title <- paste("PG vs PG_R: FuFs: ", SUMMARY.PREFIX, sep = "")
-CompSingHap <- ggplot(subset(d, gene %in% c("acrR")), aes(x = PG_SingHaps_R, y = PG_SingHaps))+
+CompSingHap <- ggplot(d, aes(x = PG_FuFs_R, y = PG_FuFs))+
             theme_light() +
-            geom_point(size = 2, alpha = 0.5, aes(shape = gene)) +
+            geom_point(size = 2, alpha = 0.5) +
             theme(text=element_text(size=8), axis.text.x=element_text(angle=45)) +
-            geom_text(aes(label=dataset), hjust = 0, vjust = 0) +
+            geom_text(aes(label=gene), hjust = 0, vjust = 0) +
             ggtitle(title) +
             geom_abline(intercept = 0, slope = 1, color = "#F94144")
 
@@ -109,7 +109,7 @@ seqinds <- ggplot(d, aes(x = reorder(dataset, -db_nseqs), y = db_nseqs))+
             ggtitle(title)
 
 title <- paste("Singleton Haps / hitNseqs: ", SUMMARY.PREFIX, sep = "")
-singhap.dbnseq <- ggplot(subset(d, gene %in% c("acrR")), aes(x = reorder(dataset, -db_nseqs), y = (ntSingHap / hit_nseqs)))+
+singhap.dbnseq <- ggplot(d), aes(x = reorder(dataset, -db_nseqs), y = (ntSingHap / hit_nseqs)))+
             theme_light() +
             geom_point(size = 2, alpha = 0.6) +
             theme(text=element_text(size=8), axis.text.x=element_text(angle=45)) +
@@ -323,10 +323,10 @@ FuFs <- ggplot(d, aes( x = dataset, y = PG_FuFs)) +
            theme_light()+
            theme(text=element_text(size=8), axis.text.x=element_text(angle=45))+
            ggtitle(title) +
-           geom_point(aes(shape = gene, col = dataset)) +
-           scale_shape_manual ("Gene", values = gene.shapes) +
-           scale_color_manual ("Dataset", values = ds.cols) +
-           scale_x_discrete(limits = gene.order)
+           geom_point(aes(col = dataset)) +
+#           scale_shape_manual ("Gene", values = gene.shapes) +
+#           scale_color_manual ("Dataset", values = ds.cols) #+
+#           scale_x_discrete(limits = gene.order)
 
 title <- paste("PG_RozasR2: ", SUMMARY.PREFIX, sep = "")
 RozasR2 <- ggplot(d, aes( x = gene, y = PG_RozasR2)) +
