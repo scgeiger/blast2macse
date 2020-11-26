@@ -239,7 +239,7 @@ foreach $GENE (@all_genes) {
                 $command =~ s/([\\()\'])/\\$1/g;
             }
             $command .= " | awk '{ print \$1 }'";
-            print "command is $command\n";
+#            print "command is $command\n";
             @temp = `$command`;
             chomp $temp[0];
             $hit_nseqs = $temp[0];
