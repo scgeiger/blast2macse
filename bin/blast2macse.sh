@@ -6,8 +6,11 @@
 # I still need to figure out a better way to handle error files
 
 REF_PATH=$1
-TIME_STAMP=$(date +"%C%m%d")
+TIME_STAMP=$(date +"%y%m%d")
 ERROR_FILE="$TIME_STAMP-blast2macse_error.log"
+FULL_PATH=$(realpath $0)
+SCRIPT_PATH=$(dirname $FULL_PATH)
+
 
 if [ -z $REF_PATH ]; then
     echo "Usage: $0 <directory with reference IDs>"
@@ -64,11 +67,12 @@ do
         # Inputs: ref gene path, db location, output location, blast specs
         # Output: $ID.raw-blast
         if [ ! -f "$ID.raw-blast" ]; then
-        blastn -db "/mnt/projects/EC_ST131/200923/db/$BLAST_DB" -query "$REF_PATH/$GENE_NAME.nt" -out "$MAIN_PATH/$SUBDIR/$GENE_NAME/$ID.raw-blast" -outfmt "6 sseqid sseq" -perc_identity 90 -qcov_hsp_perc 90 -num_alignments 100000
+        blastn -db "/mnt/projects/EC_ST131/210220/db/$BLAST_DB" -query "$REF_PATH/$GENE_NAME.nt" -out "$MAIN_PATH/$SUBDIR/$GENE_NAME/$ID.raw-blast" -outfmt "6 sseqid sseq" -perc_identity 90 -qcov_hsp_perc 90 -num_alignments 100000
             RESULT=$?
             if [ $RESULT -ne 0 ]; then
                 echo "$ID   BLAST   Error running cmd" >> "$ERROR_FILE"
                 echo "$ID: Error running blast command"
+                echo "$ID: Make sure the db is correct"
                 continue
             fi
             if [ ! -s "$ID.raw-blast" ]; then
@@ -89,7 +93,7 @@ do
         # Make sure blast output exists and has contents. If no matches were found, empty file will be made
         if [ ! -f "$ID.blast" ]; then
             if [ -f "$ID.raw-blast" ] && [ -s "$ID.raw-blast" ]; then
-                perl /mnt/projects/devspace/blast2clustal/blast2clustal.pl "$ID.raw-blast"
+                perl $SCRIPT_PATH/blast2clustal.pl "$ID.raw-blast"
                 RESULT=$?
                 if [ $RESULT -ne 0 ]; then
                     echo "$ID   BLAST2CLUSTAL unknown" >> "$ERROR_FILE"
@@ -117,7 +121,7 @@ do
 
         # get unique sequences ready and formatted
         if [ ! -f "$ID.uniqseqs" ]; then
-            perl /mnt/projects/devspace/uniqallele/seq_uniq/uniqseqs.pl "$ID.blast"
+            perl $SCRIPT_PATH/uniqseqs.pl "$ID.blast"
             RESULT=$?
             if [ $RESULT -ne 0 ]; then
                 echo "$ID   UNIQSEQ Error running uniqseqs.pl" >> "$ERROR_FILE"
@@ -131,7 +135,7 @@ do
 
         # Clean up uniqseqs to make sure all gaps are removed prior to alignment
         if [ ! -f "$ID.uniqseqs.dealign" ]; then
-            perl /mnt/projects/EC_ST131/200923/scripts/dealign.pl "$ID.uniqseqs"
+            perl $SCRIPT_PATH/dealign.pl "$ID.uniqseqs"
             RESULT=$?
             if [ $RESULT -ne 0 ]; then
                 echo "$ID: Error running dealign.pl"    
@@ -165,7 +169,7 @@ do
 
         # Expanding unique sequences into whole dataset
         if [ ! -f "expanded-$ID.uniqseqs_NT.aln" ]; then
-            perl /mnt/projects/devspace/expand-uniqseqs/expand-uniqseqs.pl "$ID.uniqseqs_NT.aln"
+            perl $SCRIPT_PATH/expand-uniqseqs.pl "$ID.uniqseqs_NT.aln"
             RESULT=$?
             if [ $RESULT -ne 0 ]; then
                 echo "$ID: Error running expand-uniqseqs.pl"
@@ -178,7 +182,7 @@ do
 
         # Making the consensus
         if [ ! -f "$ID.consensus" ]; then
-            perl /mnt/projects/devspace/consensus/consensus.pl "expanded-$ID.uniqseqs_NT.aln"
+            perl $SCRIPT_PATH/consensus.pl "expanded-$ID.uniqseqs_NT.aln"
             RESULT=$?
             if [ $RESULT -ne 0 ]; then
                 echo "$ID: Error running consensus.pl"
@@ -196,7 +200,7 @@ do
 
         # Getting codon use and distribution
         if [ ! -f "$ID.macse-codon-dist.tsv" ]; then
-            perl /mnt/projects/EC_ST131/200923/scripts/codon-distribution.pl -ref "$ID.consensus" -query "expanded-$ID.uniqseqs_NT.aln"
+            perl $SCRIPT_PATH/codon-distribution.pl -ref "$ID.consensus" -query "expanded-$ID.uniqseqs_NT.aln"
             RESULT=$?
             if [ $RESULT -ne 0 ]; then
                 echo "$ID: Error running codon-distribution.pl" 
@@ -210,7 +214,7 @@ do
 
         # Getting uniqallele data for latter plotting
         if [ ! -f "$ID.macse-nt-uniq.tsv" ] || [ ! -f "$ID.macse-aa-uniq.tsv" ]; then
-            perl /mnt/projects/EC_ST131/200923/scripts/nu-macse-uniq.pl -query "expanded-$ID.uniqseqs_NT.aln" -ref "$ID.consensus" -greedy TRUE
+            perl $SCRIPT_PATH/nu-macse-uniq.pl -query "expanded-$ID.uniqseqs_NT.aln" -ref "$ID.consensus" -greedy TRUE
             RESULT=$?
             if [ $RESULT -ne 0 ]; then
                 echo "$ID: Error running nu-macse-uniq.pl" 
@@ -230,7 +234,7 @@ do
         sed -i '/^#/d' "pg-fmt-expanded-$ID.uniqseqs_NT.aln"
 
         if [ ! -f "$ID-PopGenome.tsv" ]; then
-            Rscript /mnt/projects/EC_ST131/200923/scripts/mini-PopGenome.R "pg-fmt-expanded-$ID.uniqseqs_NT.aln"
+            Rscript $SCRIPT_PATH/mini-PopGenome.R "pg-fmt-expanded-$ID.uniqseqs_NT.aln"
             # echo ("Error message: In mean (as.numeric(x)): NAs introduced by coercion is expected. Just ignore")
             # That just means that we're likely seeing only one allele present, or not enough info to calc some stats
             # Regardless, this error will trigger the usual error message, so it's been changed here. 
@@ -243,6 +247,16 @@ do
         else
             echo "$ID: PopGenome file was detected. Skipping mini-PopGenome.R"
         fi 
+        
+        if [ ! -f "$ID.majority-allele.fasta" ]; then
+            perl $SCRIPT_PATH/get-major-allele.pl "$ID.uniqseqs.dealign"
+            if [ ! -f "$ID.majority-allele.fasta" ]; then
+                echo "$ID: Could not get majority allele file"
+                echo "$ID   M_ALLELE   Error getting major allele" >> "$ERROR_FILE"
+            fi
+        else
+            echo "$ID: Majority allele file was detected. Skipping get."
+        fi
 
     ######################
     ######################
@@ -254,7 +268,7 @@ do
         
         # Removing seqs with deletions (1 codon at least) and Ns
         if [ ! -f "$ID-removed-macse.aln" ]; then
-            perl /mnt/projects/EC_ST131/200923/scripts/rm-delN.pl -aln "expanded-$ID.uniqseqs_NT.aln" -dist "$ID.macse-codon-dist.tsv"
+            perl $SCRIPT_PATH/rm-delN.pl -aln "expanded-$ID.uniqseqs_NT.aln" -dist "$ID.macse-codon-dist.tsv"
             RESULT=$?
             if [ $RESULT -ne 0 ]; then
                 echo "$ID: Error running rm-delN.pl" >> "$ERROR_FILE"
@@ -266,7 +280,7 @@ do
 
         # Getting codon use and distribution
         if [ ! -f "$ID-removed.macse-codon-dist.tsv" ]; then
-            perl /mnt/projects/EC_ST131/200923/scripts/codon-distribution.pl -ref "$ID.consensus" -query "$ID-removed-macse.aln"
+            perl $SCRIPT_PATH/codon-distribution.pl -ref "$ID.consensus" -query "$ID-removed-macse.aln"
             RESULT=$?
             if [ $RESULT -ne 0 ]; then
                 echo "$ID-removed: Error running codon-distribution.pl"
@@ -280,7 +294,7 @@ do
 
         # Getting uniqallele data for latter plotting
         if [ ! -f "$ID-removed.macse-nt-uniq.tsv" ] || [ ! -f "$ID-removed.macse-aa-uniq.tsv" ]; then
-            perl /mnt/projects/EC_ST131/200923/scripts/nu-macse-uniq.pl -query "$ID-removed-macse.aln" -ref "$ID.consensus" -greedy TRUE
+            perl $SCRIPT_PATH/nu-macse-uniq.pl -query "$ID-removed-macse.aln" -ref "$ID.consensus" -greedy TRUE
             RESULT=$?
             if [ $RESULT -ne 0 ]; then
                 echo "$ID-removed: Error running nu-macse-uniq.pl"
@@ -300,7 +314,7 @@ do
         sed -i '/^#/d' "pg-fmt-$ID-removed-macse.aln"
         
         if [ ! -f "$ID-removed-macse-PopGenome.tsv" ]; then
-            Rscript /mnt/projects/devspace/blast2macse/mini-PopGenome.R "pg-fmt-$ID-removed-macse.aln"
+            Rscript $SCRIPT_PATH/mini-PopGenome.R "pg-fmt-$ID-removed-macse.aln"
             # echo ("Error message: In mean (as.numeric(x)): NAs introduced by coercion is expected. Just ignore")
             # That just means that we're likely seeing only one allele present, or not enough info to calc some stats
             # Regardless, this error will trigger the usual error message, so it's been changed here.

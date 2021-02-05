@@ -39,6 +39,7 @@ if ($header) {
 }
 
 foreach $seqid (keys %all_seqs) {
+    print "looking at $seqid\n";
     $dealign = $all_seqs{$seqid};
     $dealign =~ tr/\-//d;
     $dealign =~ tr/\!//d;

@@ -15,6 +15,7 @@ pacman::p_load(tidyverse, janitor, RColorBrewer, gridExtra, patchwork)
 #}
 
 #SUMMARY.FILE <- args[1] 
+CO <- 0.01 #Cut off for distribution grab
 SUMMARY.FILE <- "all-ST-summary.tsv"
 SUMMARY.PREFIX <- "all-ST-summary"
 d <- read.table(SUMMARY.FILE, header = TRUE, sep = "\t", as.is = TRUE, comment.char = "#", quote = "")
@@ -24,6 +25,7 @@ ds.cols <- c("10" = "#90bd6d",
              "131"= "#f94144"
             )
 
+OUTFILE <- paste(SUMMARY.PREFIX, "-figlist.tsv", sep = "")
 data.order <- c("10", "11", "131")
 
 d$dataset <- as.factor(d$dataset)
@@ -31,6 +33,8 @@ d$dataset <- as.factor(d$dataset)
 gene.of.interest <- "acrR" # build into args
 ST.of.interest <- "131"    # build into args
 GOI.data <- subset(d, dataset == ST.of.interest & gene == gene.of.interest)
+
+# Making unique dataframes that 
 
 ST131.df <- subset(d, dataset == "131" & nSegSite != "NA")
 ST11.df  <- subset(d, dataset == "11" & nSegSite != "NA")
@@ -48,6 +52,27 @@ ds.summary <- data.frame(data.order)
 ds.summary <- ds.summary %>% rename(ST = data.order)
 #ds.summary <- mutate(ds.summary, nGenes = nrow(subset(d, dataset == ds.summary$ST)))
 
+# Tibbles of each stat
+# using s only; genes in all 3
+
+m <- as_tibble(s)
+
+fufs.only <- select(m, gene, dataset, PG_FuFs_R)
+fufs.only <- fufs.only %>% pivot_wider( names_from = c(dataset), values_from = c(PG_FuFs_R) )
+
+fufs.all.plot <- plot_ly(fufs.only, x = ~10, y = ~11, z = ~131, type = "scatter3d", mode = "markers")
+fufs.all.plot <- fufs.all.plot %>% layout(scene = list(xaxis = list(title = 'ST10'),
+                                   yaxis = list(title = 'ST11'),
+                                   zaxis = list(title = 'ST131')),
+                      annotations = list(
+                        x = 1.13,
+                        y = 1.05,
+                        text = 'Fus Fs scores for all genes',
+                        xref = 'paper',
+                        yref = 'paper',
+                        showarrow = FALSE
+                        ))
+
 ############## Distribution and spread for individual measurements
 #Fu's Fs
 title <- paste("PG_FuFs-all:")
@@ -60,6 +85,49 @@ FuFs <- ggplot(d, aes( x = dataset, y = PG_FuFs, col = dataset)) +
            scale_color_manual ("dataset", values = ds.cols) +
            scale_x_discrete(limits = data.order) + 
            geom_label(d=d %>% filter(gene == gene.of.interest), aes(label=gene), nudge_x = .25)
+
+# Fu's Fs Table
+temp <- d[(d$hit_nseqs != 0),]
+temp <- temp[order(temp$PG_FuFs_R),]
+only.10 <- subset(temp, dataset == "10")
+row.cutoff <- ceiling(CO * nrow(only.10))
+only.10 <- only.10[1:row.cutoff, ]
+
+only.11 <- subset(temp, dataset == "11")
+row.cutoff <- ceiling(CO * nrow(only.11))
+only.11 <- only.11[1:row.cutoff, ]
+
+only.131 <- subset(temp, dataset == "131")
+row.cutoff <- ceiling(CO * nrow(only.131))
+only.131 <- only.131[1:row.cutoff, ]
+
+# Quality control (overall)
+p <- ggplot(d, aes(x = dataset, y = (hit_nseqs/db_nseqs), col = dataset)) +
+     geom_boxplot(alpha = .5, width = .1 ) +
+     geom_violin(alpha = .5) +
+     scale_color_manual ("dataset", values = ds.cols) +
+     theme_light() +
+     ggtitle("Ratio of hits over total db seqs") +
+     scale_x_discrete(limits = data.order) +
+     theme(text=element_text(size=8), axis.text.x=element_text(angle=45), plot.title = element_text(face = "bold", hjust = 0.5))
+
+p <- ggplot(d, aes(x = dataset, y = (nRem/hit_nseqs), col = dataset)) +
+     geom_boxplot(alpha = .5, width = .1 ) +
+     geom_violin( alpha = .5) +
+     scale_color_manual ("dataset", values = ds.cols) +
+     theme_light() +
+     ggtitle("Ratio of removed over total hits") +
+     scale_x_discrete(limits = data.order) +
+     theme(text=element_text(size=8), axis.text.x=element_text(angle=45), plot.title = element_text(face = "bold", hjust = 0.5))     
+
+p <- ggplot(d, aes(x = (hit_nseqs/db_nseqs), y = (nRem/hit_nseqs), col = dataset)) +
+     geom_point() +
+#    geom_label(d=d %>% filter((nRem/hit_nseqs > 0.5) & (hit_nseqs/db_nseqs < 0.5)), mapping = aes(label=gene), nudge_x = .25) +
+    scale_color_manual ("dataset", values = ds.cols) +
+    theme_light() +
+    ggtitle("Overlap of both quality measures") +
+    theme(text=element_text(size=8), axis.text.x=element_text(angle=45), plot.title = element_text(face = "bold", hjust = 0.5))
+
 
 #TajiD
 title <- paste("PG_TajimaD-all:")
