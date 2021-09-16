@@ -27,7 +27,7 @@ echo "#ID   Category    Error" > $ERROR_FILE
 # For each subdirectory in this directory
 for SUBDIR in `ls -d */`
 do
-    SUBDIR=${SUBDIR%/} 
+    SUBDIR=${SUBDIR%/}
     BLAST_DB="$SUBDIR.db"  # Blast dbs were named with this convention when generated using assemblies
 
     # For each gene in ref gene directory 
@@ -67,7 +67,7 @@ do
         # Inputs: ref gene path, db location, output location, blast specs
         # Output: $ID.raw-blast
         if [ ! -f "$ID.raw-blast" ]; then
-        blastn -db "/mnt/seqs/db/$BLAST_DB" -query "$REF_PATH/$GENE_NAME.nt" -out "$MAIN_PATH/$SUBDIR/$GENE_NAME/$ID.raw-blast" -outfmt "6 sseqid sseq" -perc_identity 90 -qcov_hsp_perc 90 -num_alignments 100000
+        blastn -db "/mnt/projects/EC_ST131/210220/db/$BLAST_DB" -query "$REF_PATH/$GENE_NAME.nt" -out "$MAIN_PATH/$SUBDIR/$GENE_NAME/$ID.raw-blast" -outfmt "6 sseqid sseq" -perc_identity 90 -qcov_hsp_perc 90 -num_alignments 100000
             RESULT=$?
             if [ $RESULT -ne 0 ]; then
                 echo "$ID   BLAST   Error running cmd" >> "$ERROR_FILE"

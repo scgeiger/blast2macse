@@ -2,24 +2,22 @@
 use warnings; 
 use strict;
 
-# Last edited 210827. Cleaned and added exit 1
-# use this to take a file of extracted uniq alleles and expand so one seq, one line 
-
-# Declare variables
-my ($in_file, $seq_file, $outfile, $id, $seqid, $row, $key);
+# use this to take a file of extracted uniqseqs and reexpand to unique seqs
+my $in_file = $ARGV[0];
+my $seq_file;
+my $out_file = "expanded-". $in_file;
 my @key_array = ();
+my $id;
 my %in_hash = ();
+my $seqid;
 my %seqs = ();
+my $row;
+my $key;
 
-# Verify input
 if (!defined $ARGV[0]) {
-    &print_usage("\nPlease specify uniqseqs fasta file.");
+    &print_usage("\nPlease specify file to extract seqs from.");
 } 
 
-$in_file = $ARGV[0];
-$outfile = "expanded-". $in_file;
-
-# Get file contents
 if (-f $in_file) {
     open I, '<', $in_file;
         while ($row = <I>) {
@@ -36,10 +34,9 @@ if (-f $in_file) {
             }
         }
     close I;
-} else {&print_usage("Did you specify a uniqseqs output file?")}
+}
 
-# Print Output
-open O, '>', $outfile;
+open O, '>', $out_file;
     foreach $key (keys %in_hash) {
         @key_array = split (/ /, $key);
         foreach $id (@key_array) {
@@ -49,9 +46,6 @@ open O, '>', $outfile;
      }
 close O;
 
-print "\nJob complete. Outfile is $outfile\n\n";
-
-############################
 sub print_usage {
     my ($error) = @_;
 
@@ -59,9 +53,11 @@ sub print_usage {
         print STDERR $error, "\n";
     }
 
-    print "\nUsage: $0 [uniqseqs file]\n";
-    print "\tInput: Uniqseqs file with seqIDs in the header\n";
-    print "\tOutput: Fasta file with each sequence separated\n";
+    print "\nUsage: $0 [FILE TO SPLIT]";
+    print "\nUse this when you have multiple seqids assigned to one seq\n";
     print "\nCheers!\n\n";
-    exit 1;
+    exit;
 }
+            
+
+

@@ -2,24 +2,27 @@
 use warnings;
 use strict;
 
-# Declare variables
-my $infile = $ARGV[0];
-(my $filename) = ($infile =~ /([^.]+)/);
-my $outfile = "formatted-" . $filename . ".blast";
-my $error_file = "error-" . $filename . ".blast";
-my $row;
-my @temp = ();
-my %seqIDs = ();
-my $keys;
-my $length;
-my $gapfreq;
-my $counter;
-my $test;
-# Verify input
+# Last edited 210827. Cleaned and added exit 1
+# Assumes input sequence file with seqid\tseq\n
+# Will put output as fasta format with >seqid\nseq\n
 
+# Declare variables
+my ($infile, $filename, $outfile);
+my ($row, $seqID);
+my ($check_in, $check_out);
+my @temp = ();
+my %seq_check = ();
+my %out_seqs = ();
+
+# Verify input
 if (!defined $ARGV[0]) {
-    die "\n\t Please specify a file that needs to be adjusted\n";
+    &print_usage("\nPlease specify a sequence file.");
 }
+
+$infile = $ARGV[0];
+($filename) = ($infile =~ /([^.]+)/);
+$outfile = "formatted-" . $filename . ".blast";
+$check_in = 0;
 
 # Get file contents
 if (-f $infile) {
@@ -30,50 +33,62 @@ if (-f $infile) {
                 next;
             }
             @temp = split(/\t/, $row);
-            $keys  = ">" . $temp[0];
-            if (exists($seqIDs{$keys})) { #if exists, make .1
-                $counter = 1;
-                $test = $keys . ".$counter";
-                if (exists($seqIDs{$test})) { #if .1, make .2
-                    $counter++;
-                    $test = $keys . ".$counter";
-                    if (exists($seqIDs{$test})) { #if .2, make .3
-                        $counter++;
-                        $test = $keys . ".$counter";
-                        if (exists($seqIDs{$test})) { #if .3, make.4
-                            $counter++;
-                            $test = $keys . ".$counter";
-                                if (exists($seqIDs{$test})) { #if .4, print error
-                                    print "$keys has 5 versions. Error in blast2clustal.\n";
-                                }
-                            $keys = $keys . ".$counter"; #is .4
-                        } 
-                        else {$keys = $keys . ".$counter";} #is .3
-                    }
-                    else {$keys = $keys . ".$counter";}     #is .2 
-                }
-                else {$keys = $keys . ".$counter";}                  
+            $seqID  = ">" . $temp[0];
+            if (exists($seq_check{$seqID})) {
+                $seq_check{$seqID}++;
+                $seqID .= ".$seq_check{$seqID}";
             }
-            $seqIDs{$keys} = $temp[1];
+            else {
+                $seq_check{$seqID} = 0;
+            } 
+            $out_seqs{$seqID} = $temp[1];
+            $check_in++;
         }
     close F;
 } else {&print_usage("Did you specify a file with aligned seqs?")}
 
+# Check that number of seqs in equals number of seqs out
+$check_out = scalar(keys %out_seqs);
+print "\nFormatting has finished. Sanity check:\n";
+print "\tInput: $check_in sequences.\n";
+print "\tOutput: $check_out sequences.\n\n";
+
+if ($check_in != $check_out) {
+    print "\t!!!!Something isn't quite right!!!!\n";
+    return undef;
+}
+
+# Print Outfile
 open O, '>', $outfile;
-    for $keys (keys %seqIDs) {
-        print O $keys . "\n";
-        print O $seqIDs{$keys} . "\n";
+    for $seqID (keys %out_seqs) {
+        if (defined $out_seqs{$seqID}) {
+            print O $seqID . "\n";
+            print O $out_seqs{$seqID} . "\n";
+        }
+        else {
+            print "\t$seqID was detected without a sequence.\n";
+            print "\tThere may be a formatting problem\n";
+            print "\tDeleting output file and returning error\n\n";
+            close O;
+            unlink($outfile) or die "Couldn't clean up problem file\n";
+            exit 1;
+        }
     }
 close O;
 
-#open E, '>', $error_file;
-#    for $keys (%seqIDs) {
-#        $length = length($seqIDs{$keys});
-#        $gapfreq = $seqIDs{$keys} =~ tr/-//;
-#        if (($gapfreq / $length) > 0.7) {
-#            print E $keys;
-#        }
-#    }
-#close E;
+print "\nOutfile is $outfile\n\n";
 
-print "Blast formatted output is ready for clustal analysis as $outfile\n";
+############################
+sub print_usage {
+    my ($error) = @_;
+    if (defined $error) {
+        print STDERR $error, "\n";
+    }
+
+    print "\nUsage: $0 [sequence file]\n";
+    print "\tAssumes input sequence file with seqid\\tseq\\n\n";
+    print "\tThis is blastn outfmt 6 sseqid sseq\n";
+    print "\tOutput will be fasta-formatted >seqid\\nseq\\n\n";
+    print "\tCheers!\n\n";
+    exit 1;
+}

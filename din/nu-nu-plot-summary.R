@@ -18,21 +18,21 @@ pacman::p_load(tidyverse, janitor, RColorBrewer, gridExtra, patchwork, GGally, g
 
 #SUMMARY.FILE <- args[1] 
 CO <- 0.01 #Cut off for distribution grab
-SUMMARY.FILE <- "all-ST131-summary.tsv"
-SUMMARY.PREFIX <- "all-ST131-summary"
+SUMMARY.FILE <- "all-ST-summary.tsv"
+SUMMARY.PREFIX <- "all-ST-summary"
 d <- read.table(SUMMARY.FILE, header = TRUE, sep = "\t", as.is = TRUE, comment.char = "#", quote = "")
 
-ds.cols <- c("ST131-A" = "#90bd6d", # should make this more flexible based on unique values in ds; assign by order?
-             "ST131-B" = "#2a9d8f",
-             "ST131-C"= "#f94144"
+ds.cols <- c("10" = "#90bd6d", # should make this more flexible based on unique values in ds; assign by order?
+             "11" = "#2a9d8f",
+             "131"= "#f94144"
             )
 
 OUTFILE          <- paste(SUMMARY.PREFIX, "-figlist.tsv", sep = "") # A list of figures to be made for top hits
 QC.OUT           <- paste(SUMMARY.PREFIX, "-qc-rem.tsv", sep = "")  # A list of gene IDs that were removed by QC and why
-data.order       <- c("ST131-A", "ST131-B", "ST131-C") # Should make this more flexible
+data.order       <- c("10", "11", "131") # Should make this more flexible
 d$dataset        <- as.factor(d$dataset)
 gene.of.interest <- "acrR" # build into args
-ST.of.interest   <- "ST131-C"    # build into args
+ST.of.interest   <- "131"    # build into args
 GOI.data         <- subset(d, dataset == ST.of.interest & gene == gene.of.interest)
 
 ds.list 	<-	unique(d$dataset)
@@ -63,17 +63,17 @@ c <- c[c$gene %in% gene.freq$gene,]
 # Fu's Fs Table (looping through datasets and statistics)
 temp <- d[(d$hit_nseqs != 0),]
 temp <- temp[order(temp$PG_FuFs_R),]
-only.ST131A <- subset(temp, dataset == "ST131-A")
-row.cutoff <- ceiling(CO * nrow(only.ST131A))
-only.ST131A <- only.ST131A[1:row.cutoff, ]
+only.10 <- subset(temp, dataset == "10")
+row.cutoff <- ceiling(CO * nrow(only.10))
+only.10 <- only.10[1:row.cutoff, ]
 
-only.ST131B <- subset(temp, dataset == "ST131-B")
-row.cutoff <- ceiling(CO * nrow(only.ST131B))
-only.ST131B <- only.ST131B[1:row.cutoff, ]
+only.11 <- subset(temp, dataset == "11")
+row.cutoff <- ceiling(CO * nrow(only.11))
+only.11 <- only.11[1:row.cutoff, ]
 
-only.ST131C <- subset(temp, dataset == "ST131-C")
-row.cutoff <- ceiling(CO * nrow(only.ST131C))
-only.ST131C <- only.ST131C[1:row.cutoff, ]
+only.131 <- subset(temp, dataset == "131")
+row.cutoff <- ceiling(CO * nrow(only.131))
+only.131 <- only.131[1:row.cutoff, ]
 
 # Quality control (overall)
 p <- ggplot(d, aes(x = dataset, y = (hit_nseqs/db_nseqs), col = dataset)) +
@@ -178,7 +178,7 @@ for(stat_ in stat_R.list) {
                  annotation_logticks(sides="l")
     }
     stat.plots[[stat_]] = p
-    ggsave(stat.plots[[stat_]], file = paste0("comp-", stat_, "-common-distribution.png"))
+    #ggsave(stat.plots[[stat_]], file = paste0("comp-", stat_, "-common-distribution.png"))
 }
 
 test.plot <- arrangeGrob(grobs = c(stat.plots), nrow = 1)
@@ -337,44 +337,6 @@ MutIdentityVsFuFs2 <- ggplot(data=subset(d, !is.na(ntHap_R)), aes(y = PG_FuFs_R,
            #scale_x_continuous(trans = 'log10') +
            #annotation_logticks(sides="b") +#trbl
            geom_label(d=d %>% filter(gene == gene.of.interest), aes(label=gene))
-
-
-p <- ggplot(d, aes(x = (PG_FuFs_R), y = (aaNS_R + aaFS_R) / (aaFS_R + aaMS_R + aaSYN_R + aaNS_R + aaIN_R), col = dataset)) +
-	geom_point(alpha = .5) +
-     scale_color_manual ("dataset", values = ds.cols) +
-     theme_light() +
-     ggtitle("FuFs vs NS/FS enrichment") +
-     theme(text=element_text(size=8), axis.text.x=element_text(angle=45), plot.title = element_text(face = "bold", hjust = 0.5))+
-           geom_label(d=d %>% filter(gene == gene.of.interest), aes(label=gene))
-
-
-p <- ggplot(only.ST131C, aes(x = (PG_FuFs_R), y = (aaNS_R + aaFS_R) / (aaFS_R + aaMS_R + aaSYN_R + aaNS_R + aaIN_R), col = dataset)) +
-	geom_point(alpha = .5) +
-     scale_color_manual ("dataset", values = ds.cols) +
-     theme_light() +
-     ggtitle("FuFs vs NS/FS enrichment") +
-     theme(text=element_text(size=8), axis.text.x=element_text(angle=45), plot.title = element_text(face = "bold", hjust = 0.5))+
-           geom_label(d=only.ST131C %>% filter(gene == gene.of.interest), aes(label=gene))
-
-
-p <- ggplot(only.ST131A, aes(x = (PG_FuFs_R), y = (aaNS_R + aaFS_R) / (aaFS_R + aaMS_R + aaSYN_R + aaNS_R + aaIN_R), col = dataset)) +
-	geom_point(alpha = .5) +
-     scale_color_manual ("dataset", values = ds.cols) +
-     theme_light() +
-     ggtitle("FuFs vs NS/FS enrichment") +
-     theme(text=element_text(size=8), axis.text.x=element_text(angle=45), plot.title = element_text(face = "bold", hjust = 0.5))+
-           geom_label(d=d %>% filter(gene == gene.of.interest), aes(label=gene))
-
-p <- ggplot(only.ST131B, aes(x = (PG_FuFs_R), y = (aaNS_R + aaFS_R) / (aaFS_R + aaMS_R + aaSYN_R + aaNS_R + aaIN_R), col = dataset)) +
-	geom_point(alpha = .5) +
-     scale_color_manual ("dataset", values = ds.cols) +
-     theme_light() +
-     ggtitle("FuFs vs NS/FS enrichment") +
-     theme(text=element_text(size=8), axis.text.x=element_text(angle=45), plot.title = element_text(face = "bold", hjust = 0.5))+
-           geom_label(d=only.ST131B %>% filter(gene == gene.of.interest), aes(label=gene))
-
-
-
 
 ####################Similar to ST131
 #same pi

@@ -22,14 +22,14 @@ SUMMARY.FILE <- "all-ST-summary.tsv"
 SUMMARY.PREFIX <- "all-ST-summary"
 d <- read.table(SUMMARY.FILE, header = TRUE, sep = "\t", as.is = TRUE, comment.char = "#", quote = "")
 
-ds.cols <- c("10" = "#90bd6d", # should make this more flexible based on unique values in ds; assign by order?
-             "11" = "#2a9d8f",
-             "131"= "#f94144"
+ds.cols <- c("ST10" = "#90bd6d", # should make this more flexible based on unique values in ds; assign by order?
+             "ST11" = "#2a9d8f",
+             "ST131"= "#f94144"
             )
 
 OUTFILE          <- paste(SUMMARY.PREFIX, "-figlist.tsv", sep = "") # A list of figures to be made for top hits
 QC.OUT           <- paste(SUMMARY.PREFIX, "-qc-rem.tsv", sep = "")  # A list of gene IDs that were removed by QC and why
-data.order       <- c("10", "11", "131") # Should make this more flexible
+data.order       <- c("ST10", "ST11", "ST131") # Should make this more flexible
 d$dataset        <- as.factor(d$dataset)
 gene.of.interest <- "acrR" # build into args
 ST.of.interest   <- "131"    # build into args
@@ -63,15 +63,15 @@ c <- c[c$gene %in% gene.freq$gene,]
 # Fu's Fs Table (looping through datasets and statistics)
 temp <- d[(d$hit_nseqs != 0),]
 temp <- temp[order(temp$PG_FuFs_R),]
-only.10 <- subset(temp, dataset == "10")
+only.10 <- subset(temp, dataset == "ST10")
 row.cutoff <- ceiling(CO * nrow(only.10))
 only.10 <- only.10[1:row.cutoff, ]
 
-only.11 <- subset(temp, dataset == "11")
+only.11 <- subset(temp, dataset == "ST11")
 row.cutoff <- ceiling(CO * nrow(only.11))
 only.11 <- only.11[1:row.cutoff, ]
 
-only.131 <- subset(temp, dataset == "131")
+only.131 <- subset(temp, dataset == "ST131")
 row.cutoff <- ceiling(CO * nrow(only.131))
 only.131 <- only.131[1:row.cutoff, ]
 

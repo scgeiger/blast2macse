@@ -37,7 +37,6 @@ my %hash;
 my $pos;
 my $no_consensus_err_file;
 my $file;
-my @uniq = ();
 
 GetOptions (
     'refdir=s'     => \$REFPATH,     # Directory with reference sequences
@@ -305,23 +304,18 @@ foreach $GENE (@all_genes) {
             # Need to exit loop here
 
             $temp = ();
-            if (-f "$PARENTPATH/$GENE/$DATA_ID.consensus" ) {
-                open F, '<', "$PARENTPATH/$GENE/$DATA_ID.consensus";
-                    while ($row = <F>) {
-                        chomp $row;
-                        if ($row =~ /^>/ || $row =~ /^#/) {
-                            next;
-                        }
-                        else {
-                            $temp .= $row;
-                        }
+            open F, '<', "$PARENTPATH/$GENE/$DATA_ID.consensus";
+                while ($row = <F>) {
+                    chomp $row;
+                    if ($row =~ /^>/ || $row =~ /^#/) {
+                        next;
                     }
-                close F; 
-                $aln_length = length($temp);
-            }
-            else {
-                print "Problem getting $DATA_ID consensus\n";
-            }
+                    else {
+                        $temp .= $row;
+                    }
+                }
+            close F; 
+            $aln_length = length($temp);
             #print "aln_length is $aln_length\n";
 
             ###################### 
@@ -554,7 +548,7 @@ foreach $GENE (@all_genes) {
             $temp = ();
             @temp = ();
 #            my $csv = Text::CSV->new({sep => "\t"});
-            @uniq = ();
+            my @uniq = ();
             $nSingSNPs = 0;
             $n_ntSingHap = 0;
             $n_ntMajorHap = 0; 
@@ -590,7 +584,7 @@ foreach $GENE (@all_genes) {
             ##########################
             $temp = ();
             @temp = ();
-            @uniq = ();
+            my @uniq = ();
 #            $nSingSNPs_R    = 0;
             $n_ntSingHap_R  = 0;
             $n_ntMajorHap_R = 0;
