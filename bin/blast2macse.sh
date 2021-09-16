@@ -214,17 +214,17 @@ do
 
         # Getting uniqallele data for latter plotting
         if [ ! -f "$ID.macse-nt-uniq.tsv" ] || [ ! -f "$ID.macse-aa-uniq.tsv" ]; then
-            perl $SCRIPT_PATH/nu-macse-uniq.pl -query "expanded-$ID.uniqseqs_NT.aln" -ref "$ID.consensus" -greedy TRUE
+            perl $SCRIPT_PATH/macse-uniq.pl -query "expanded-$ID.uniqseqs_NT.aln" -ref "$ID.consensus" -greedy TRUE
             RESULT=$?
             if [ $RESULT -ne 0 ]; then
-                echo "$ID: Error running nu-macse-uniq.pl" 
-                echo "$ID   MACSE   Error running nu-macse-uniq.pl" >> "$ERROR_FILE"
+                echo "$ID: Error running macse-uniq.pl" 
+                echo "$ID   MACSE   Error running macse-uniq.pl" >> "$ERROR_FILE"
                 continue
             fi
             mv nt-uniq-macse-output.tsv "$ID.macse-nt-uniq.tsv"
             mv aa-uniq-macse-output.tsv "$ID.macse-aa-uniq.tsv"
         else
-            echo "$ID: macse uniqallele files found. Skipping nu-macse-uniq.pl"
+            echo "$ID: macse uniqallele files found. Skipping macse-uniq.pl"
         fi 
 
         # Running PopGenome analysis
@@ -294,17 +294,17 @@ do
 
         # Getting uniqallele data for latter plotting
         if [ ! -f "$ID-removed.macse-nt-uniq.tsv" ] || [ ! -f "$ID-removed.macse-aa-uniq.tsv" ]; then
-            perl $SCRIPT_PATH/nu-macse-uniq.pl -query "$ID-removed-macse.aln" -ref "$ID.consensus" -greedy TRUE
+            perl $SCRIPT_PATH/macse-uniq.pl -query "$ID-removed-macse.aln" -ref "$ID.consensus" -greedy TRUE
             RESULT=$?
             if [ $RESULT -ne 0 ]; then
-                echo "$ID-removed: Error running nu-macse-uniq.pl"
-                echo "$ID   R_MACSE   Error running nu-macse-uniq.pl" >> "$ERROR_FILE"
+                echo "$ID-removed: Error running macse-uniq.pl"
+                echo "$ID   R_MACSE   Error running macse-uniq.pl" >> "$ERROR_FILE"
                 continue
             fi
             mv nt-uniq-macse-output.tsv "$ID-removed.macse-nt-uniq.tsv"
             mv aa-uniq-macse-output.tsv "$ID-removed.macse-aa-uniq.tsv"
         else
-            echo "$ID-removed: macse uniqallele files found. Skipping nu-macse-uniq.pl"
+            echo "$ID-removed: macse uniqallele files found. Skipping macse-uniq.pl"
         fi
 
         # Running PopGenome analysis
