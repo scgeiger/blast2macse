@@ -11,14 +11,15 @@ use warnings;
 
 # Declare vars
 my ($input, $outfile); 
-my ($normPos, $pos, $length, $mutType);
+my ($ntPos, $ntPosN, $length, $ntMutID, $aaPos, $aaPosN, $aaMutID, $codIn);
 my ($temp, $row, $geneID);
 my @inFile = ();
+my $header = "#geneID\tntPosN\tntMutID\taaPosN\taaMutID\tcodonIndex\n";
 
 # Verify input
 $input = $ARGV[0];
 
-$outfile = "normalised-pos-ntmuts.txt";
+$outfile = "normalised-pos-muts.txt";
 if (!defined $ARGV[0] || !defined $input) {
     &print_usage("\nPlease specify a codon distribution file.");
 }
@@ -33,6 +34,9 @@ if ( -f $input ) {
 
     open F, '<', $input;
     open O, '>>', $outfile;
+        if ( -z $outfile ) {
+            print O $header;
+        }
         while ($row = <F>) {
             chomp $row;
             if ($row =~ /^#/ || $row =~ /^pos/ ) {
@@ -40,14 +44,19 @@ if ( -f $input ) {
             }
             else {
                 @inFile = split "\t", $row;
-                $pos = $inFile[0];
-                $length = $inFile[11];
-                $mutType = $inFile[3];
+                $length = $length = $inFile[11];
                 until ($temp = $length % 3) { # we need length make sure std
                     $length++;
-                } 
-                $normPos = ($pos/($length));
-                print O "$geneID\t$mutType\t$normPos\n";
+                }
+
+                $ntPos =  $inFile[0];
+                $ntPosN = ($ntPos / $length);
+                $ntMutID = $inFile[3];
+                $aaPos = $inFile[5];
+                $aaPosN = ($aaPos / ($length/3));
+                $aaMutID = $inFile[10];
+                $codIn = $inFile[4];
+                print O "$geneID\t$ntPosN\t$ntMutID\t$aaPosN\t$aaMutID\t$codIn\n";
             } 
         }
     close O;
@@ -67,8 +76,8 @@ sub print_usage {
     print "\nUsage: $0 [codon-dist.tsv]\n";
     print "\tInput: path to *codon-dist.tsv files)\n";
     print "\tOutput: a table that has normalised positions for all mutations; note that >>\n";
-    print "\tSuffix to uncleaned file is: *geneID.macse-codon-dist.tsv\n"
-    print "\tSuffix to cleaned file is: *geneID-removed.macse-codon-dist.tsv\n"
+    print "\tSuffix to uncleaned file is: *geneID.macse-codon-dist.tsv\n";
+    print "\tSuffix to cleaned file is: *geneID-removed.macse-codon-dist.tsv\n";
     print "\nCheers!\n\n";
     exit 1;
 }
