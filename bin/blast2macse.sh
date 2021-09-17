@@ -66,7 +66,7 @@ do
         # Run BLAST analysis
         # Inputs: ref gene path, db location, output location, blast specs
         # Output: $ID.raw-blast
-        if [ ! -f "$ID.raw-blast" ]; then
+        if [ ! -f "$ID.raw-blast" ] && [ ! -f "$ID.blast" ]; then
         blastn -db "/mnt/seqs/db/$BLAST_DB" -query "$REF_PATH/$GENE_NAME.nt" -out "$MAIN_PATH/$SUBDIR/$GENE_NAME/$ID.raw-blast" -outfmt "6 sseqid sseq" -perc_identity 90 -qcov_hsp_perc 90 -num_alignments 100000
             RESULT=$?
             if [ $RESULT -ne 0 ]; then
@@ -102,6 +102,8 @@ do
                 fi
                 mv "formatted-$ID.blast" "$ID.blast"
                 echo "$ID: formatted BLAST file."
+                rm -f "$ID.raw-blast"
+                echo "removed $ID.raw-blast"
             elif [ ! -f $ID.raw-blast ]; then
                 echo "$ID   BLAST   file not generated" >> "$ERROR_FILE"
                 echo "$ID: BLAST file was not generated. Exiting loop."
@@ -239,6 +241,8 @@ do
             # That just means that we're likely seeing only one allele present, or not enough info to calc some stats
             # Regardless, this error will trigger the usual error message, so it's been changed here. 
             mv "PopGenome.tsv" "$ID-PopGenome.tsv"
+            rm -f "pg-fmt-expanded-$ID.uniqseqs_NT.aln"
+
             if [ ! -f "$ID-PopGenome.tsv" ]; then
                 echo "$ID: Error running mini-PopGenome.R"
                 echo "$ID   POPGENOME   Error running mini-PopGenome.R" >> "$ERROR_FILE"
@@ -319,6 +323,8 @@ do
             # That just means that we're likely seeing only one allele present, or not enough info to calc some stats
             # Regardless, this error will trigger the usual error message, so it's been changed here.
             mv "PopGenome.tsv" "$ID-removed-macse-PopGenome.tsv" 
+            rm -f "pg-fmt-$ID-removed-macse.aln"
+
             if [ ! -f "$ID-removed-macse-PopGenome.tsv" ]; then
                 echo "$ID-removed: Error running mini-PopGenome.R"
                 echo "$ID   R_POPGENOME   Error running mini-PopGenome.R" >> "$ERROR_FILE"
@@ -327,6 +333,9 @@ do
         else
             echo "$ID-removed: PopGenome file was detected. Skipping mini-PopGenome.R"
         fi
+        
+        rm -f "$ID-removed-macse.aln"
+        rm -f "expanded-$ID.uniqseqs_NT.aln"
 
         echo ""
         echo "done looping through $GENE_NAME"    

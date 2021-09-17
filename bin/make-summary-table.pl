@@ -156,10 +156,10 @@ foreach $GENE (@all_genes) {
 #    print "$GENE\n";
     $DATA_ID = $PARENTDIR . "-" . $GENE;
 
-    ###############################
-    # Check if raw-blast is empty #
-    ###############################
-    if ( -z "$PARENTPATH/$GENE/$DATA_ID.raw-blast" ) {
+    ###########################
+    # Check if blast is empty #
+    ###########################
+    if ( -z "$PARENTPATH/$GENE/$DATA_ID.blast" || ! -f "$PARENTPATH/$GENE/$DATA_ID.blast") {
     open O, '>', $outfile or die "problem saving output to file\n";
         print O "#Analysis run on $TIMESTAMP, using gene $GENE.\n";
         print "$GENE: Didn't find any BLAST hits. Exiting table with defaults\n";
@@ -278,7 +278,7 @@ foreach $GENE (@all_genes) {
             # get number of blast hits #
             ############################
             @temp = ();
-            $command = "wc -l ". "$PARENTPATH/$GENE/$DATA_ID.raw-blast";
+            $command = "wc -l ". "$PARENTPATH/$GENE/$DATA_ID.blast";
             if ( $command =~ /\(/ || $command =~ /\)/ || $command =~ /\'/) {
                 $command =~ s/([\\()\'])/\\$1/g;
             }
@@ -286,7 +286,7 @@ foreach $GENE (@all_genes) {
 #            print "command is $command\n";
             @temp = `$command`;
             chomp $temp[0];
-            $hit_nseqs = $temp[0];
+            $hit_nseqs = $temp[0] / 2;
 #            $hit_nseqs =~ s/\s.*//; #remove everything after number
             #print "hit_nseqs is $hit_nseqs\n"; 
       
