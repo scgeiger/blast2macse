@@ -781,7 +781,7 @@ sub print_usage {
     print "\nUsage: $0 -refdir [directory with reference genes]\n";
     print "\tThe script is highly customized\n";
 
-    print "\tBE SURE TO START THIS IN YOUR PARENT DIRECTORY\n";
+    print "\tBE SURE TO START THIS IN YOUR [ ST ] DIRECTORY\n";
     print "\trefdir: directory holding reference sequences that were blasted\n";
     print "\tNote that query and ref must both be the same length\n";
 
