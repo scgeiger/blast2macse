@@ -6,7 +6,7 @@
 
 pacman::p_load(tidyverse, janitor, RColorBrewer, gridExtra, patchwork, GGally, ggstance)
 
-IN.FILE <- "normalised-pos-aamuts.txt"
+IN.FILE      <- "normalised-pos-aamuts.txt"
 PROT.ID.FILE <- "2ln-GCF_000285655-protID.txt"
 SUMMARY.FILE <- "131-all-summary.tsv"
 

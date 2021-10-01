@@ -6,6 +6,10 @@ use Cwd;
 use Text::CSV;
 
 # Use this code in the ST directory, not in the analysis directory
+# Last changed 211001; before when exiting on no hits, would report aln length
+# This did not make sense. Have moved calc of ref length before blast check
+# Now when exiting on 0, ref length is reported instead of aln
+
 # Assumes my/path/is/analysis/ST/genes
 
 my ($DATA_ID, $PARENTDIR, $PARENTPATH, $REFPATH, $TIMESTAMP, $GENE);
@@ -156,6 +160,24 @@ foreach $GENE (@all_genes) {
 #    print "$GENE\n";
     $DATA_ID = $PARENTDIR . "-" . $GENE;
 
+    ########################
+    # Get reference length #
+    ########################
+    $temp = ();
+    open F, '<', "$REFPATH/$GENE.nt";
+        while ($row = <F>) {
+            chomp $row;
+            if ($row =~ /^>/ || $row =~ /^#/) {
+                next;
+            }
+            else {
+                $temp .= $row;
+            }
+        }
+    close F;
+    $ref_length = length($temp);
+    #print "ref_length for $GENE is $ref_length\n";
+
     ###########################
     # Check if blast is empty #
     ###########################
@@ -167,8 +189,8 @@ foreach $GENE (@all_genes) {
                     $GENE       . "\t" .    # gene
                     $db_nseqs   . "\t" .    # db_nseqs
                     "0"         . "\t" .    # hit_nseqs
-                    "NA"        . "\t" .    # ref_length
-                    $aln_length . "\t" .    # aln_length
+                    "$ref_length"."\t".   # ref_length
+                    "NA"        . "\t" .    # aln_length
                     "0"         . "\t" .    # ntTS
                     "0"         . "\t" .    # ntTV
                     "0"         . "\t" .    # ntIN
@@ -235,24 +257,6 @@ foreach $GENE (@all_genes) {
             close O;
             next;
     }
-
-    ########################
-    # Get reference length #
-    ########################
-    $temp = (); 
-    open F, '<', "$REFPATH/$GENE.nt";
-        while ($row = <F>) {
-            chomp $row;
-            if ($row =~ /^>/ || $row =~ /^#/) {
-                next;
-            }
-            else {
-                $temp .= $row;
-            }
-        }
-    close F; 
-    $ref_length = length($temp);
-    #print "ref_length for $GENE is $ref_length\n";
 
     open O, '>', $outfile or die "problem saving output to file\n";
         print O "#Analysis run on $TIMESTAMP, using gene $GENE.\n";
