@@ -154,10 +154,6 @@ open S, '>', $all_file or die "problem saving output to all_file\n";
 foreach $GENE (@all_genes) {
     $outfile = "$PARENTPATH/$GENE/" . "$PARENTDIR-$GENE" . "-summary.tsv";
     print "$GENE\n";
-#    if ( $GENE =~ /\(/ ) {
-#        $GENE =~ s/([\\()])/\\$1/g;
-#    }
-#    print "$GENE\n";
     $DATA_ID = $PARENTDIR . "-" . $GENE;
 
     ########################
@@ -176,7 +172,22 @@ foreach $GENE (@all_genes) {
         }
     close F;
     $ref_length = length($temp);
-    #print "ref_length for $GENE is $ref_length\n";
+
+    #################
+    # Set main vars #
+    #################
+    $DIR = ();
+    $DIR = $PARENTDIR;
+    $dataset = "$PARENTDIR";
+
+    ######################################
+    # get number of sequences downloaded #
+    ######################################
+    @temp = ();
+    open my $F, '<', "$PARENTPATH/$PARENTDIR-count.txt";
+        chomp (@temp = <$F>);
+        $db_nseqs = $temp[0];
+    close $F;
 
     ###########################
     # Check if blast is empty #
@@ -261,23 +272,9 @@ foreach $GENE (@all_genes) {
     open O, '>', $outfile or die "problem saving output to file\n";
         print O "#Analysis run on $TIMESTAMP, using gene $GENE.\n";
         print O $header;
-        $DIR = ();
-        $DIR = $PARENTDIR;
-#        foreach $DIR (@SUBDIR) {
-#            $DATA_ID = $DIR . "-" . $GENE;
+            
             $DATA_ID = $PARENTDIR . "-" . $GENE;
-#            $dataset = "$DIR";
-             $dataset = "$PARENTDIR";
-            ######################################
-            # get number of sequences downloaded #
-            ######################################
-            @temp = ();
-#            print "llama $PARENTPATH/$PARENTDIR-count.txt\n";
-            open my $F, '<', "$PARENTPATH/$PARENTDIR-count.txt";
-                chomp (@temp = <$F>);
-                $db_nseqs = $temp[0];
-            close $F;
-           
+            
             ############################
             # get number of blast hits #
             ############################
@@ -294,12 +291,6 @@ foreach $GENE (@all_genes) {
 #            $hit_nseqs =~ s/\s.*//; #remove everything after number
             #print "hit_nseqs is $hit_nseqs\n"; 
       
-            ######################## 
-            # get reference length #
-            ########################
-            # Felt cute might delete later
-            #print "ref_length is $ref_length\n";
-           
             ######################## 
             # get alignment length #
             ########################
@@ -652,6 +643,7 @@ foreach $GENE (@all_genes) {
             ######################
             # Getting PopGenome Data with removed seqs
             @temp = ();
+            if (-f "$PARENTPATH/$GENE/$DATA_ID-removed-macse-PopGenome.tsv") {
             open F, '<', "$PARENTPATH/$GENE/$DATA_ID-removed-macse-PopGenome.tsv";
                 while ($row = <F>) {
                     chomp $row;
@@ -670,7 +662,19 @@ foreach $GENE (@all_genes) {
             $PG_Haplo_R    = $temp2[8];
             $PG_SingHaps_R = $temp2[9];
             $PG_nSeqs_R    = $temp2[7];
-
+            }
+            else {
+            $PG_TajimaD_R  = "NA";
+            $PG_RozasR2_R  = "NA";
+            $PG_FuliF_R    = "NA";
+            $PG_FuliD_R    = "NA";
+            $PG_FuFs_R     = "NA";
+            $PG_pi_R       = "NA";
+            $PG_SegSite_R  = "NA";
+            $PG_Haplo_R    = "NA";
+            $PG_SingHaps_R = "NA";
+            $PG_nSeqs_R    = "NA";
+            }
             ######################
             # Get nRem seq       #
             ######################
