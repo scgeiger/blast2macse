@@ -333,7 +333,45 @@ do
         else
             echo "$ID-removed: PopGenome file was detected. Skipping mini-PopGenome.R"
         fi
-        
+#### INsert running dnds here
+# get uniqseqs of removed- macse aln
+        if [ ! -f "$ID-removed-macse.uniqseqs" ]; then
+            perl $SCRIPT_PATH/uniqseqs.pl "$ID-removed-macse.aln"
+            RESULT=$?
+            if [ $RESULT -ne 0 ]; then
+                echo "$ID   UNIQSEQ Error running uniqseqs.pl" >> "$ERROR_FILE"
+                echo "$ID: Error running uniqseqs.pl"
+                continue
+            fi
+            mv uniqseqs.fasta "$ID-removed-macse.uniqseqs"
+        else
+            echo "$ID: File $ID-removed-macse.uniqseqs identified. Skipping uniqalleles."
+        fi
+# run allele mapping
+        if [ ! -f "am-$ID-removed-macse.fasta" ]; then
+            perl $SCRIPT_PATH/allele-map.pl "$ID-removed-macse.uniqseqs"
+            RESULT=$?
+            if [ $RESULT -ne 0 ]; then
+                echo "$ID   ALLELEMAP Error running allele-map.pl" >> "$ERROR_FILE"
+                echo "$ID: Error running allele-map.pl"
+                continue
+            fi
+        else
+            echo "$ID: File am-$ID-removed-macse.fasta identified. Skipping allelemapping."
+        fi 
+# run yn00 wrapper
+        if [ ! -f "am-$ID-removed-macse-dnds-matrix.tsv" ]; then
+            perl $SCRIPT_PATH/wrap-run-yn.pl "am-$ID-removed-macse.fasta"
+            RESULT=$?
+            if [ $RESULT -ne 0 ]; then
+                echo "$ID   YNWRAP Error running wrap-run-yn.pl" >> "$ERROR_FILE"
+                echo "$ID: Error running wrap-run-yn.pl"
+                continue
+            fi
+        else
+            echo "$ID: File am-$ID-removed-macse-dnds-matrix.tsv. Skipping dnds calcs."
+        fi       
+ 
         rm -f "$ID-removed-macse.aln"
         rm -f "expanded-$ID.uniqseqs_NT.aln"
 

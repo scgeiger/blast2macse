@@ -154,7 +154,7 @@ sub print_usage {
         print STDERR $error, "\n";
     }
 
-    print "\nUsage: $0 [uniqseqs_NT.aln]\n";
+    print "\nUsage: $0 [am-*uniqseqs.aln]\n";
     print "\tInput: path to *uniqseqs_NT.aln files)\n";
     print "\nCheers!\n\n";
     exit 1;
