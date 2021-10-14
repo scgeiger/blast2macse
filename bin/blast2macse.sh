@@ -75,13 +75,13 @@ do
                 echo "$ID: Make sure the db is correct"
                 continue
             fi
-            if [ ! -s "$ID.raw-blast" ]; then
+            if [ ! -s "$ID.raw-blast" ] && [ ! -f "$ID.blast" ]; then
                 echo "$ID   BLAST   No matches found" >> "$ERROR_FILE"
                 echo "$ID: No BLAST hits found"
                 continue
             fi
         else
-            if [ ! -s "$ID.raw-blast" ]; then
+            if [ ! -s "$ID.raw-blast" ] && [ ! -f "$ID.blast" ]; then
                 echo "$ID   BLAST   No matches found" >> "$ERROR_FILE"
                 echo "$ID: No BLAST hits found"
                 continue
