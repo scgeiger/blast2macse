@@ -9,13 +9,6 @@
 
 pacman::p_load(tidyverse, janitor, RColorBrewer, gridExtra, patchwork, GGally, ggstance)
 
-#args <-commandArgs(TRUE)
-
-#if (length(args)==0) {
-#    stop ("Need to specify summary table for analysis",
-#        call.=FALSE)
-#}
-
 #SUMMARY.FILE <- args[1] 
 CO <- 0.01 #Cut off for distribution grab
 SUMMARY.FILE <- "all-ST-summary.tsv"
