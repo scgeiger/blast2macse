@@ -10,7 +10,7 @@ use warnings;
 # Updated 210916
 
 # Declare vars
-my ($input, $outfile); 
+my ($input, $outfile, $filename); 
 my ($ntPos, $ntPosN, $length, $ntMutID, $aaPos, $aaPosN, $aaMutID, $codIn);
 my ($temp, $row, $geneID);
 my @inFile = ();
@@ -19,7 +19,8 @@ my $header = "#geneID\tntPosN\tntMutID\taaPosN\taaMutID\tcodonIndex\n";
 # Verify input
 $input = $ARGV[0];
 
-$outfile = "normalised-pos-muts.txt";
+($filename) = ($input =~ /([^.]+)/);
+$outfile = $filename . "-normalised-pos-muts.txt";
 if (!defined $ARGV[0] || !defined $input) {
     &print_usage("\nPlease specify a codon distribution file.");
 }

@@ -6,6 +6,15 @@
 
 pacman::p_load(tidyverse, janitor, RColorBrewer, gridExtra, patchwork, GGally, ggstance)
 
+args <-commandArgs(TRUE)
+
+if (length(args)==0) {
+    stop ("specify a file in dataset-gene-removed-nromalised-pos-muts.txt fmt",
+        call.=FALSE)
+}
+
+#SUMMARY.FILE <- args[1]
+
 IN.FILE      <- "normalised-pos-aamuts.txt"
 PROT.ID.FILE <- "2ln-GCF_000285655-protID.txt"
 SUMMARY.FILE <- "131-all-summary.tsv"
