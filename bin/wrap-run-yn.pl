@@ -5,7 +5,7 @@ use warnings;
 
 # This script is for running swaine's run-yn.pl script on one file
 # In the future, build in shortcut so it can be run on uniqueseqs_NT file
-#   all seqIDs are in header for each uniq seq; can run calc once and copy over
+# all seqIDs are in header for each uniq seq; can run calc once and copy over
 # Sequences will be de-aligned before running
 # Assumes 2ln format
 # Outputs will (in final implementation) include: 

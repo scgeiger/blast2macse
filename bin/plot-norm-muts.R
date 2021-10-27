@@ -38,6 +38,7 @@ norm.mutplot.params = list(
      scale_fill_manual  ("muttype", values = aa.mut.cols), 
      geom_histogram(aes(color = aaMutID, fill = aaMutID), binwidth = .025),
      theme_light(),
+     xlim(-.05,1.05),
      labs(x = "Normalised position",
           y = "Frequency of mutation",
           fill = "Amino Acid Mutation Type")
@@ -67,6 +68,7 @@ norm.mutplot.params = list(
      scale_fill_manual  ("muttype", values = nt.mut.cols),
      geom_histogram(aes(color = ntMutID, fill = ntMutID), binwidth = .025),
      theme_light(),
+     xlim(-0.05,1.05),
      labs(x = "Normalised position",
           y = "Frequency of mutation",
           fill = "Nucleotide Mutation Type")
